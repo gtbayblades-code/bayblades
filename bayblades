@@ -1,0 +1,102 @@
+local Players=game:GetService("Players")
+local RunService=game:GetService("RunService")
+local UIS=game:GetService("UserInputService")
+local TS=game:GetService("TweenService")
+local WS=game:GetService("Workspace")
+local CG=game:GetService("CoreGui")
+local LT=game:GetService("Lighting")
+local CAM=WS.CurrentCamera
+local LP=Players.LocalPlayer
+
+local KEY_CORRETA="BAYBLADES-2026"
+local parent=(gethui and select(2,pcall(gethui))) or CG
+
+local C={accent=Color3.fromRGB(58,140,255),bg=Color3.fromRGB(11,14,22),panel=Color3.fromRGB(18,22,34),elem=Color3.fromRGB(26,32,48),text=Color3.fromRGB(235,242,255),dim=Color3.fromRGB(120,138,175),on=Color3.fromRGB(58,140,255),off=Color3.fromRGB(32,40,60),danger=Color3.fromRGB(255,80,90),ok=Color3.fromRGB(80,255,140)}
+
+local function CARREGAR_HUB()
+local F={AIM=false,SMOOTH=0.25,FOV=120,TEAM=true,WALL=true,SHOWFOV=true,ESP=false,BOX=true,NAME=true,HP=true,DIST=true,TRACER=false,FLY=false,FLYSPD=60,SPD=false,SPDVAL=32,IJP=false,NOCLIP=false,FB=false}
+local aimHeld=false
+local espObjs={}
+local flyC,ncC
+local function lc() return LP.Character end
+local function lr() local c=lc() return c and c:FindFirstChild("HumanoidRootPart") end
+local function lh() local c=lc() return c and c:FindFirstChildOfClass("Humanoid") end
+local function isTm(p) if not F.TEAM then return false end return p.Team~=nil and p.Team==LP.Team end
+local function getP(p,n) local c=p.Character return c and c:FindFirstChild(n) end
+local function valid(p) if p==LP then return false end if isTm(p) then return false end local h=p.Character and p.Character:FindFirstChildOfClass("Humanoid") return h and h.Health>0 end
+local function w2s(pos) local sp,on=CAM:WorldToViewportPoint(pos) if not on or sp.Z<=0 then return nil end return Vector2.new(sp.X,sp.Y) end
+local function vis(part) if not F.WALL then return true end local rp=RaycastParams.new() rp.FilterType=Enum.RaycastFilterType.Exclude rp.FilterDescendantsInstances={LP.Character,CAM} local h=WS:Raycast(CAM.CFrame.Position,part.Position-CAM.CFrame.Position,rp) return h==nil or h.Instance:IsDescendantOf(part.Parent) end
+local function gP() if gethui then local ok,h=pcall(gethui) if ok and h then return h end end return CG end
+local function closest() local b,bd=nil,F.FOV local c=CAM.ViewportSize/2 for _,p in ipairs(Players:GetPlayers()) do if valid(p) then local pt=getP(p,"Head") if pt then local sp=w2s(pt.Position) if sp then local d=(sp-c).Magnitude if d<bd and vis(pt) then b,bd=pt,d end end end end end return b end
+RunService.RenderStepped:Connect(function() if not F.AIM or not aimHeld then return end local t=closest() if t then CAM.CFrame=CAM.CFrame:Lerp(CFrame.new(CAM.CFrame.Position,t.Position),F.SMOOTH) end end)
+local espGui
+local function ensEsp() if espGui and espGui.Parent then return end espGui=Instance.new("ScreenGui") espGui.Name="BBESP" espGui.ResetOnSpawn=false espGui.IgnoreGuiInset=true espGui.DisplayOrder=999999 espGui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling espGui.Parent=gP() end
+local function mkEsp(p) ensEsp() local b=Instance.new("Frame") b.BackgroundTransparency=1 b.BorderSizePixel=0 b.Visible=false b.ZIndex=10 b.Parent=espGui local s=Instance.new("UIStroke",b) s.Color=C.accent s.Thickness=1.5 local g=Instance.new("UIStroke",b) g.Color=C.accent g.Thickness=4 g.Transparency=0.7 local n=Instance.new("TextLabel",b) n.BackgroundTransparency=1 n.TextColor3=C.accent n.TextSize=13 n.Font=Enum.Font.GothamBold n.TextStrokeTransparency=0 n.Text=p.Name n.Size=UDim2.new(1,0,0,14) n.Position=UDim2.new(0,0,0,-18) n.ZIndex=11 local hb=Instance.new("Frame",b) hb.BackgroundColor3=Color3.fromRGB(20,24,38) hb.BorderSizePixel=0 hb.Size=UDim2.new(0,3,1,0) hb.Position=UDim2.new(1,4,0,0) hb.ZIndex=11 local hh=Instance.new("Frame",hb) hh.BackgroundColor3=Color3.fromRGB(0,255,90) hh.BorderSizePixel=0 hh.Size=UDim2.new(1,0,1,0) hh.AnchorPoint=Vector2.new(0,1) hh.Position=UDim2.new(0,0,1,0) hh.ZIndex=12 local d=Instance.new("TextLabel",b) d.BackgroundTransparency=1 d.TextColor3=C.accent d.TextSize=12 d.Font=Enum.Font.GothamMedium d.TextStrokeTransparency=0 d.Size=UDim2.new(1,0,0,14) d.Position=UDim2.new(0,0,1,3) d.ZIndex=11 local tr=Instance.new("Frame",espGui) tr.BackgroundColor3=C.accent tr.BorderSizePixel=0 tr.AnchorPoint=Vector2.new(0,0.5) tr.Size=UDim2.new(0,0,0,1) tr.Visible=false tr.ZIndex=9 return {b=b,s=s,g=g,n=n,hh=hh,hb=hb,d=d,tr=tr} end
+local function rmEsp(p) local e=espObjs[p] if e then e.b:Destroy() e.tr:Destroy() espObjs[p]=nil end end
+local function geEsp(p) if not espObjs[p] then espObjs[p]=mkEsp(p) end return espObjs[p] end
+local function upEsp() if not F.ESP then for _,e in pairs(espObjs) do e.b.Visible=false e.tr.Visible=false end return end for _,p in ipairs(Players:GetPlayers()) do if p~=LP then local e=geEsp(p) local ch=p.Character local hrp=ch and ch:FindFirstChild("HumanoidRootPart") local hd=ch and ch:FindFirstChild("Head") local h=ch and ch:FindFirstChildOfClass("Humanoid") if ch and hrp and hd and h and h.Health>0 then local t=w2s(hd.Position+Vector3.new(0,0.8,0)) local bo=w2s(hrp.Position-Vector3.new(0,2.5,0)) if t and bo then local H=math.abs(bo.Y-t.Y) local W=H*0.55 e.b.Visible=true e.b.Position=UDim2.new(0,t.X-W/2,0,t.Y) e.b.Size=UDim2.new(0,W,0,H) e.s.Enabled=F.BOX e.g.Enabled=F.BOX e.n.Visible=F.NAME e.n.Text=p.Name e.hb.Visible=F.HP local fr=math.clamp(h.Health/h.MaxHealth,0,1) e.hh.Size=UDim2.new(1,0,fr,0) e.hh.BackgroundColor3=Color3.fromRGB(math.floor(255*(1-fr)),math.floor(255*fr),60) e.d.Visible=F.DIST local mr=lr() if mr then e.d.Text=string.format("%d",(mr.Position-hrp.Position).Magnitude) end if F.TRACER then e.tr.Visible=true local o=Vector2.new(CAM.ViewportSize.X/2,CAM.ViewportSize.Y) local tg=Vector2.new(t.X,t.Y+H/2) local df=tg-o e.tr.Position=UDim2.new(0,o.X,0,o.Y) e.tr.Size=UDim2.new(0,df.Magnitude,0,1) e.tr.Rotation=math.deg(math.atan2(df.Y,df.X)) else e.tr.Visible=false end else e.b.Visible=false e.tr.Visible=false end else e.b.Visible=false e.tr.Visible=false end end end end
+RunService.RenderStepped:Connect(upEsp)
+Players.PlayerRemoving:Connect(rmEsp)
+local fovG,fovC
+RunService.RenderStepped:Connect(function() if F.SHOWFOV and F.AIM then if not (fovC and fovC.Parent) then fovG=Instance.new("ScreenGui",gP()) fovG.Name="BBFOV" fovG.ResetOnSpawn=false fovG.IgnoreGuiInset=true fovG.DisplayOrder=999998 fovC=Instance.new("Frame",fovG) fovC.AnchorPoint=Vector2.new(0.5,0.5) fovC.BackgroundTransparency=1 fovC.Position=UDim2.new(0.5,0,0.5,0) Instance.new("UICorner",fovC).CornerRadius=UDim.new(1,0) local st=Instance.new("UIStroke",fovC) st.Color=C.accent st.Thickness=1.5 st.Transparency=0.25 end fovC.Visible=true fovC.Size=UDim2.new(0,F.FOV,0,F.FOV) elseif fovC then fovC.Visible=false end end)
+local function stopFly() if flyC then flyC:Disconnect() flyC=nil end local r=lr() local h=lh() if h then h.PlatformStand=false end if r then for _,o in ipairs(r:GetChildren()) do if o:IsA("BodyVelocity") or o:IsA("BodyGyro") then o:Destroy() end end end end
+local function startFly() local h,r=lh(),lr() if not h or not r then return end h.PlatformStand=true local bv=Instance.new("BodyVelocity",r) bv.MaxForce=Vector3.new(1e5,1e5,1e5) bv.Velocity=Vector3.zero local bg=Instance.new("BodyGyro",r) bg.MaxTorque=Vector3.new(1e5,1e5,1e5) bg.P=1e4 bg.CFrame=r.CFrame flyC=RunService.RenderStepped:Connect(function() local cam=CAM.CFrame local m=Vector3.zero if UIS:IsKeyDown(Enum.KeyCode.W) then m+=cam.LookVector end if UIS:IsKeyDown(Enum.KeyCode.S) then m-=cam.LookVector end if UIS:IsKeyDown(Enum.KeyCode.A) then m-=cam.RightVector end if UIS:IsKeyDown(Enum.KeyCode.D) then m+=cam.RightVector end if UIS:IsKeyDown(Enum.KeyCode.Space) then m+=Vector3.new(0,1,0) end if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then m-=Vector3.new(0,1,0) end bv.Velocity=m.Magnitude>0 and m.Unit*F.FLYSPD or Vector3.zero end) end
+local function setNC(on) if ncC then ncC:Disconnect() ncC=nil end if not on then return end ncC=RunService.Stepped:Connect(function() local c=lc() if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") and p.CanCollide then p.CanCollide=false end end end end) end
+task.spawn(function() while true do local r=lr() if F.FLY and r and not flyC then startFly() elseif not F.FLY and flyC then stopFly() end setNC(F.NOCLIP) task.wait(0.3) end end)
+RunService.Heartbeat:Connect(function() local h=lh() if h then if F.SPD then h.WalkSpeed=F.SPDVAL end if F.IJP and UIS:IsKeyDown(Enum.KeyCode.Space) then h:ChangeState(Enum.HumanoidStateType.Jumping) end end end)
+local function fb() if F.FB then LT.Ambient=Color3.fromRGB(178,178,178) LT.Brightness=3 LT.ClockTime=12 LT.FogEnd=1e6 LT.GlobalShadows=false else LT.Ambient=Color3.fromRGB(70,70,70) LT.Brightness=1 LT.GlobalShadows=true end end
+local par=gP()
+local old=par:FindFirstChild("BBHub") if old then old:Destroy() end
+local gui=Instance.new("ScreenGui",par) gui.Name="BBHub" gui.ResetOnSpawn=false gui.IgnoreGuiInset=true gui.DisplayOrder=1000000 gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+local main=Instance.new("Frame",gui) main.Size=UDim2.new(0,520,0,360) main.Position=UDim2.new(0.5,-260,0.5,-180) main.BackgroundColor3=C.bg main.BorderSizePixel=0 main.Active=true main.Draggable=true Instance.new("UICorner",main).CornerRadius=UDim.new(0,16) local mst=Instance.new("UIStroke",main) mst.Color=C.accent mst.Thickness=1.5 mst.Transparency=0.5
+local side=Instance.new("Frame",main) side.Size=UDim2.new(0,150,1,0) side.BackgroundColor3=C.panel side.BorderSizePixel=0 Instance.new("UICorner",side).CornerRadius=UDim.new(0,16)
+local lg=Instance.new("TextLabel",side) lg.Size=UDim2.new(1,0,0,34) lg.Position=UDim2.new(0,0,0,16) lg.BackgroundTransparency=1 lg.TextColor3=C.text lg.TextSize=19 lg.Font=Enum.Font.GothamBlack lg.Text="BAYBLADES"
+local lgs=Instance.new("TextLabel",side) lgs.Size=UDim2.new(1,0,0,14) lgs.Position=UDim2.new(0,0,0,48) lgs.BackgroundTransparency=1 lgs.TextColor3=C.accent lgs.TextSize=10 lgs.Font=Enum.Font.GothamMedium lgs.Text="U N I V E R S A L"
+local tlF=Instance.new("Frame",side) tlF.Size=UDim2.new(1,-20,1,-100) tlF.Position=UDim2.new(0,10,0,86) tlF.BackgroundTransparency=1 Instance.new("UIListLayout",tlF).Padding=UDim.new(0,6)
+local pages={} local tbs={}
+local function mkPage(name) local b=Instance.new("TextButton",tlF) b.Size=UDim2.new(1,0,0,38) b.BackgroundColor3=C.elem b.BackgroundTransparency=1 b.BorderSizePixel=0 b.Text="" b.AutoButtonColor=false Instance.new("UICorner",b).CornerRadius=UDim.new(0,9) local bar=Instance.new("Frame",b) bar.Size=UDim2.new(0,3,0,0) bar.Position=UDim2.new(0,0,0.5,0) bar.AnchorPoint=Vector2.new(0,0.5) bar.BackgroundColor3=C.accent bar.BorderSizePixel=0 Instance.new("UICorner",bar).CornerRadius=UDim.new(1,0) local l=Instance.new("TextLabel",b) l.Size=UDim2.new(1,-20,1,0) l.Position=UDim2.new(0,18,0,0) l.BackgroundTransparency=1 l.TextColor3=C.dim l.TextSize=14 l.Font=Enum.Font.GothamMedium l.TextXAlignment=Enum.TextXAlignment.Left l.Text=name local pg=Instance.new("ScrollingFrame",main) pg.Size=UDim2.new(1,-170,1,-30) pg.Position=UDim2.new(0,160,0,15) pg.BackgroundTransparency=1 pg.BorderSizePixel=0 pg.ScrollBarThickness=3 pg.ScrollBarImageColor3=C.accent pg.CanvasSize=UDim2.new(0,0,0,0) pg.AutomaticCanvasSize=Enum.AutomaticSize.Y pg.Visible=false Instance.new("UIListLayout",pg).Padding=UDim.new(0,8) pages[name]=pg tbs[name]={b=b,bar=bar,l=l} b.MouseButton1Click:Connect(function() for n,p in pairs(pages) do p.Visible=(n==name) local tb=tbs[n] TS:Create(tb.bar,TweenInfo.new(0.22),{Size=(n==name) and UDim2.new(0,3,0,22) or UDim2.new(0,3,0,0)}):Play() TS:Create(tb.l,TweenInfo.new(0.22),{TextColor3=(n==name) and C.text or C.dim}):Play() TS:Create(tb.b,TweenInfo.new(0.22),{BackgroundTransparency=(n==name) and 0 or 1}):Play() end end) return pg end
+local function mkTog(pg,label,key,cb) local r=Instance.new("Frame",pg) r.Size=UDim2.new(1,-10,0,38) r.BackgroundColor3=C.panel r.BorderSizePixel=0 Instance.new("UICorner",r).CornerRadius=UDim.new(0,9) local rs=Instance.new("UIStroke",r) rs.Color=C.elem rs.Thickness=1 rs.Transparency=0.5 local l=Instance.new("TextLabel",r) l.Size=UDim2.new(1,-70,1,0) l.Position=UDim2.new(0,14,0,0) l.BackgroundTransparency=1 l.TextColor3=C.text l.TextSize=13 l.Font=Enum.Font.GothamMedium l.TextXAlignment=Enum.TextXAlignment.Left l.Text=label local s=Instance.new("TextButton",r) s.Size=UDim2.new(0,42,0,22) s.Position=UDim2.new(1,-54,0.5,-11) s.BackgroundColor3=F[key] and C.on or C.off s.BorderSizePixel=0 s.Text="" s.AutoButtonColor=false Instance.new("UICorner",s).CornerRadius=UDim.new(1,0) local k=Instance.new("Frame",s) k.Size=UDim2.new(0,18,0,18) k.Position=F[key] and UDim2.new(1,-20,0,2) or UDim2.new(0,2,0,2) k.BackgroundColor3=C.text k.BorderSizePixel=0 Instance.new("UICorner",k).CornerRadius=UDim.new(1,0) s.MouseButton1Click:Connect(function() F[key]=not F[key] local on=F[key] TS:Create(s,TweenInfo.new(0.2),{BackgroundColor3=on and C.on or C.off}):Play() TS:Create(k,TweenInfo.new(0.2,Enum.EasingStyle.Back),{Position=on and UDim2.new(1,-20,0,2) or UDim2.new(0,2,0,2)}):Play() if cb then cb(on) end end) end
+local function mkSld(pg,label,key,mn,mx) local r=Instance.new("Frame",pg) r.Size=UDim2.new(1,-10,0,56) r.BackgroundColor3=C.panel r.BorderSizePixel=0 Instance.new("UICorner",r).CornerRadius=UDim.new(0,9) local rs=Instance.new("UIStroke",r) rs.Color=C.elem rs.Thickness=1 rs.Transparency=0.5 local l=Instance.new("TextLabel",r) l.Size=UDim2.new(1,-20,0,20) l.Position=UDim2.new(0,14,0,6) l.BackgroundTransparency=1 l.TextColor3=C.text l.TextSize=13 l.Font=Enum.Font.GothamMedium l.TextXAlignment=Enum.TextXAlignment.Left l.Text=label.."   "..string.format("%.2f",F[key]) local tr=Instance.new("Frame",r) tr.Size=UDim2.new(1,-28,0,6) tr.Position=UDim2.new(0,14,0,36) tr.BackgroundColor3=C.elem tr.BorderSizePixel=0 Instance.new("UICorner",tr).CornerRadius=UDim.new(1,0) local fl=Instance.new("Frame",tr) fl.Size=UDim2.new((F[key]-mn)/(mx-mn),0,1,0) fl.BackgroundColor3=C.accent fl.BorderSizePixel=0 Instance.new("UICorner",fl).CornerRadius=UDim.new(1,0) local kn=Instance.new("Frame",tr) kn.Size=UDim2.new(0,14,0,14) kn.AnchorPoint=Vector2.new(0.5,0.5) kn.Position=UDim2.new((F[key]-mn)/(mx-mn),0,0.5,0) kn.BackgroundColor3=C.text kn.BorderSizePixel=0 Instance.new("UICorner",kn).CornerRadius=UDim.new(1,0) local dg=false local function sfx(x) local rl=math.clamp((x-tr.AbsolutePosition.X)/tr.AbsoluteSize.X,0,1) local v=mn+(mx-mn)*rl F[key]=v fl.Size=UDim2.new(rl,0,1,0) kn.Position=UDim2.new(rl,0,0.5,0) l.Text=label.."   "..string.format("%.2f",v) end tr.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then dg=true sfx(i.Position.X) end end) UIS.InputChanged:Connect(function(i) if dg and i.UserInputType==Enum.UserInputType.MouseMovement then sfx(i.Position.X) end end) UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then dg=false end end) end
+local ap=mkPage("Aimbot") mkTog(ap,"Enabled","AIM") mkTog(ap,"Show FOV","SHOWFOV") mkTog(ap,"Team Check","TEAM") mkTog(ap,"Wall Check","WALL") mkSld(ap,"FOV","FOV",20,400) mkSld(ap,"Smooth","SMOOTH",0.05,1)
+local ep=mkPage("ESP") mkTog(ep,"Enabled","ESP") mkTog(ep,"Box","BOX") mkTog(ep,"Name","NAME") mkTog(ep,"Health","HP") mkTog(ep,"Distance","DIST") mkTog(ep,"Tracer","TRACER")
+local mp=mkPage("Movement") mkTog(mp,"Fly","FLY") mkSld(mp,"Fly Speed","FLYSPD",10,200) mkTog(mp,"Speed","SPD") mkSld(mp,"Speed Value","SPDVAL",16,200) mkTog(mp,"Infinite Jump","IJP") mkTog(mp,"Noclip","NOCLIP")
+local xp=mkPage("Misc") mkTog(xp,"Fullbright","FB",function() fb() end)
+pages["Aimbot"].Visible=true tbs["Aimbot"].bar.Size=UDim2.new(0,3,0,22) tbs["Aimbot"].l.TextColor3=C.text tbs["Aimbot"].b.BackgroundTransparency=0
+UIS.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton2 then aimHeld=true end end)
+UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton2 then aimHeld=false end end)
+UIS.InputBegan:Connect(function(i,gp) if gp then return end if i.KeyCode==Enum.KeyCode.RightShift then main.Visible=not main.Visible end end)
+print("[Bayblades] hub carregado")
+end
+
+local function abrirKeyUI()
+local old=parent:FindFirstChild("BBKey") if old then old:Destroy() end
+local gui=Instance.new("ScreenGui",parent) gui.Name="BBKey" gui.ResetOnSpawn=false gui.IgnoreGuiInset=true gui.DisplayOrder=2000000
+local box=Instance.new("Frame",gui) box.Size=UDim2.new(0,380,0,230) box.Position=UDim2.new(0.5,-190,0.5,-115) box.BackgroundColor3=C.bg box.BorderSizePixel=0 box.Active=true box.Draggable=true Instance.new("UICorner",box).CornerRadius=UDim.new(0,16) local bs=Instance.new("UIStroke",box) bs.Color=C.accent bs.Thickness=1.5 bs.Transparency=0.4
+local title=Instance.new("TextLabel",box) title.Size=UDim2.new(1,0,0,50) title.Position=UDim2.new(0,0,0,20) title.BackgroundTransparency=1 title.TextColor3=C.text title.TextSize=26 title.Font=Enum.Font.GothamBlack title.Text="BAYBLADES"
+local sub=Instance.new("TextLabel",box) sub.Size=UDim2.new(1,0,0,18) sub.Position=UDim2.new(0,0,0,66) sub.BackgroundTransparency=1 sub.TextColor3=C.accent sub.TextSize=12 sub.Font=Enum.Font.GothamMedium sub.Text="insira sua key para continuar"
+local field=Instance.new("Frame",box) field.Size=UDim2.new(1,-60,0,44) field.Position=UDim2.new(0,30,0,100) field.BackgroundColor3=C.panel field.BorderSizePixel=0 Instance.new("UICorner",field).CornerRadius=UDim.new(0,10) local fs=Instance.new("UIStroke",field) fs.Color=C.elem fs.Thickness=1
+local tb=Instance.new("TextBox",field) tb.Size=UDim2.new(1,-24,1,0) tb.Position=UDim2.new(0,12,0,0) tb.BackgroundTransparency=1 tb.TextColor3=C.text tb.TextSize=15 tb.Font=Enum.Font.GothamMedium tb.PlaceholderText="XXXX-XXXX-XXXX" tb.PlaceholderColor3=C.dim tb.Text="" tb.ClearTextOnFocus=false
+local btn=Instance.new("TextButton",box) btn.Size=UDim2.new(1,-60,0,44) btn.Position=UDim2.new(0,30,0,158) btn.BackgroundColor3=C.accent btn.BorderSizePixel=0 btn.TextColor3=C.text btn.TextSize=15 btn.Font=Enum.Font.GothamBold btn.Text="VERIFICAR" btn.AutoButtonColor=false Instance.new("UICorner",btn).CornerRadius=UDim.new(0,10)
+local status=Instance.new("TextLabel",box) status.Size=UDim2.new(1,-60,0,16) status.Position=UDim2.new(0,30,0,206) status.BackgroundTransparency=1 status.TextColor3=C.dim status.TextSize=12 status.Font=Enum.Font.GothamMedium status.TextXAlignment=Enum.TextXAlignment.Left status.Text=""
+btn.MouseEnter:Connect(function() TS:Create(btn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(80,160,255)}):Play() end)
+btn.MouseLeave:Connect(function() TS:Create(btn,TweenInfo.new(0.15),{BackgroundColor3=C.accent}):Play() end)
+local function verificar()
+ if tb.Text==KEY_CORRETA then
+  status.TextColor3=C.ok status.Text="key correta. liberando..."
+  task.wait(0.5)
+  TS:Create(box,TweenInfo.new(0.35),{Size=UDim2.new(0,0,0,0),Position=UDim2.new(0.5,0,0.5,0)}):Play()
+  task.wait(0.35) gui:Destroy() CARREGAR_HUB()
+ else
+  status.TextColor3=C.danger status.Text="key incorreta." tb.Text=""
+  TS:Create(field,TweenInfo.new(0.07),{Position=UDim2.new(0,24,0,100)}):Play() task.wait(0.07)
+  TS:Create(field,TweenInfo.new(0.07),{Position=UDim2.new(0,36,0,100)}):Play() task.wait(0.07)
+  TS:Create(field,TweenInfo.new(0.07),{Position=UDim2.new(0,30,0,100)}):Play()
+ end
+end
+btn.MouseButton1Click:Connect(verificar)
+tb.FocusLost:Connect(function(e) if e then verificar() end end)
+end
+
+-- SEMPRE pede a key antes do hub
+abrirKeyUI()
+print("[Bayblades] key system carregado. key: BAYBLADES-2026")

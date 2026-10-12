@@ -1,2 +1,0 @@
-# bayblades
-universal fps script
