@@ -8,22 +8,12 @@ local LT=game:GetService("Lighting")
 local CAM=WS.CurrentCamera
 local LP=Players.LocalPlayer
 
--- =============================================================
--- KEYS — tipo "cliente" ou "admin"
--- =============================================================
-local KEYS = {
-    ["BAYBLADES-2026"]  = "cliente",
-    ["USER-ZEZIN-01"]   = "cliente",
-    ["ADMIN-BAYB-01"]   = "admin",
-    ["ADMIN-ZEZIN-02"]  = "admin",
-}
-
+local KEYS={["BAYBLADES-2026"]="cliente",["ADMIN-BAYB-01"]="admin"}
 local parent=(gethui and select(2,pcall(gethui))) or CG
-
 local C={accent=Color3.fromRGB(58,140,255),bg=Color3.fromRGB(11,14,22),panel=Color3.fromRGB(18,22,34),elem=Color3.fromRGB(26,32,48),text=Color3.fromRGB(235,242,255),dim=Color3.fromRGB(120,138,175),on=Color3.fromRGB(58,140,255),off=Color3.fromRGB(32,40,60),danger=Color3.fromRGB(255,80,90),ok=Color3.fromRGB(80,255,140),admin=Color3.fromRGB(255,180,60)}
 
 local function CARREGAR_HUB(tipo)
-local isAdmin = (tipo == "admin")
+local isAdmin=(tipo=="admin")
 local F={AIM=false,SMOOTH=0.25,FOV=120,TEAM=true,WALL=true,SHOWFOV=true,ESP=false,BOX=true,NAME=true,HP=true,DIST=true,TRACER=false,FLY=false,FLYSPD=60,SPD=false,SPDVAL=32,IJP=false,NOCLIP=false,FB=false}
 local aimHeld=false
 local espObjs={}
@@ -61,7 +51,7 @@ local gui=Instance.new("ScreenGui",par) gui.Name="BBHub" gui.ResetOnSpawn=false 
 local main=Instance.new("Frame",gui) main.Size=UDim2.new(0,520,0,380) main.Position=UDim2.new(0.5,-260,0.5,-190) main.BackgroundColor3=C.bg main.BorderSizePixel=0 main.Active=true main.Draggable=true Instance.new("UICorner",main).CornerRadius=UDim.new(0,16) local mst=Instance.new("UIStroke",main) mst.Color=isAdmin and C.admin or C.accent mst.Thickness=1.5 mst.Transparency=0.5
 local side=Instance.new("Frame",main) side.Size=UDim2.new(0,150,1,0) side.BackgroundColor3=C.panel side.BorderSizePixel=0 Instance.new("UICorner",side).CornerRadius=UDim.new(0,16)
 local lg=Instance.new("TextLabel",side) lg.Size=UDim2.new(1,0,0,34) lg.Position=UDim2.new(0,0,0,16) lg.BackgroundTransparency=1 lg.TextColor3=C.text lg.TextSize=19 lg.Font=Enum.Font.GothamBlack lg.Text="BAYBLADES"
-local lgs=Instance.new("TextLabel",side) lgs.Size=UDim2.new(1,0,0,14) lgs.Position=UDim2.new(0,0,0,48) lgs.BackgroundTransparency=1 lgs.TextColor3=isAdmin and C.admin or C.accent lgs.TextSize=10 lgs.Font=Enum.Font.GothamMedium lgs.Text=isAdmin and "★ ADMIN ★" or "U N I V E R S A L"
+local lgs=Instance.new("TextLabel",side) lgs.Size=UDim2.new(1,0,0,14) lgs.Position=UDim2.new(0,0,0,48) lgs.BackgroundTransparency=1 lgs.TextColor3=isAdmin and C.admin or C.accent lgs.TextSize=10 lgs.Font=Enum.Font.GothamMedium lgs.Text=isAdmin and "ADMIN" or "UNIVERSAL"
 local tlF=Instance.new("Frame",side) tlF.Size=UDim2.new(1,-20,1,-100) tlF.Position=UDim2.new(0,10,0,86) tlF.BackgroundTransparency=1 Instance.new("UIListLayout",tlF).Padding=UDim.new(0,6)
 local pages={} local tbs={}
 local function mkPage(name) local b=Instance.new("TextButton",tlF) b.Size=UDim2.new(1,0,0,38) b.BackgroundColor3=C.elem b.BackgroundTransparency=1 b.BorderSizePixel=0 b.Text="" b.AutoButtonColor=false Instance.new("UICorner",b).CornerRadius=UDim.new(0,9) local bar=Instance.new("Frame",b) bar.Size=UDim2.new(0,3,0,0) bar.Position=UDim2.new(0,0,0.5,0) bar.AnchorPoint=Vector2.new(0,0.5) bar.BackgroundColor3=isAdmin and C.admin or C.accent bar.BorderSizePixel=0 Instance.new("UICorner",bar).CornerRadius=UDim.new(1,0) local l=Instance.new("TextLabel",b) l.Size=UDim2.new(1,-20,1,0) l.Position=UDim2.new(0,18,0,0) l.BackgroundTransparency=1 l.TextColor3=C.dim l.TextSize=14 l.Font=Enum.Font.GothamMedium l.TextXAlignment=Enum.TextXAlignment.Left l.Text=name local pg=Instance.new("ScrollingFrame",main) pg.Size=UDim2.new(1,-170,1,-30) pg.Position=UDim2.new(0,160,0,15) pg.BackgroundTransparency=1 pg.BorderSizePixel=0 pg.ScrollBarThickness=3 pg.ScrollBarImageColor3=C.accent pg.CanvasSize=UDim2.new(0,0,0,0) pg.AutomaticCanvasSize=Enum.AutomaticSize.Y pg.Visible=false Instance.new("UIListLayout",pg).Padding=UDim.new(0,8) pages[name]=pg tbs[name]={b=b,bar=bar,l=l} b.MouseButton1Click:Connect(function() for n,p in pairs(pages) do p.Visible=(n==name) local tb=tbs[n] TS:Create(tb.bar,TweenInfo.new(0.22),{Size=(n==name) and UDim2.new(0,3,0,22) or UDim2.new(0,3,0,0)}):Play() TS:Create(tb.l,TweenInfo.new(0.22),{TextColor3=(n==name) and C.text or C.dim}):Play() TS:Create(tb.b,TweenInfo.new(0.22),{BackgroundTransparency=(n==name) and 0 or 1}):Play() end end) return pg end
@@ -73,162 +63,48 @@ local ep=mkPage("ESP") mkTog(ep,"Enabled","ESP") mkTog(ep,"Box","BOX") mkTog(ep,
 local mp=mkPage("Movement") mkTog(mp,"Fly","FLY") mkSld(mp,"Fly Speed","FLYSPD",10,200) mkTog(mp,"Speed","SPD") mkSld(mp,"Speed Value","SPDVAL",16,200) mkTog(mp,"Infinite Jump","IJP") mkTog(mp,"Noclip","NOCLIP")
 local xp=mkPage("Misc") mkTog(xp,"Fullbright","FB",function() fb() end)
 
--- =============================================================
--- ABA ADMIN — só aparece pra key de administrador
--- =============================================================
 if isAdmin then
-    local adminPage = mkPage("Admin")
+local adp=mkPage("Admin")
+local r1=Instance.new("Frame",adp) r1.Size=UDim2.new(1,-10,0,56) r1.BackgroundColor3=C.panel r1.BorderSizePixel=0 Instance.new("UICorner",r1).CornerRadius=UDim.new(0,9)
+local l1=Instance.new("TextLabel",r1) l1.Size=UDim2.new(1,-20,0,20) l1.Position=UDim2.new(0,14,0,6) l1.BackgroundTransparency=1 l1.TextColor3=C.text l1.TextSize=13 l1.Font=Enum.Font.GothamMedium l1.TextXAlignment=Enum.TextXAlignment.Left l1.Text="Teleportar ate jogador (nome)"
+local f1=Instance.new("TextBox",r1) f1.Size=UDim2.new(1,-90,0,26) f1.Position=UDim2.new(0,14,0,26) f1.BackgroundColor3=C.elem f1.BorderSizePixel=0 f1.TextColor3=C.text f1.TextSize=13 f1.Font=Enum.Font.Gotham f1.PlaceholderText="nome" f1.PlaceholderColor3=C.dim f1.Text="" Instance.new("UICorner",f1).CornerRadius=UDim.new(0,6)
+local b1=Instance.new("TextButton",r1) b1.Size=UDim2.new(0,60,0,26) b1.Position=UDim2.new(1,-74,0,26) b1.BackgroundColor3=C.admin b1.BorderSizePixel=0 b1.TextColor3=Color3.fromRGB(20,20,20) b1.TextSize=13 b1.Font=Enum.Font.GothamBold b1.Text="IR" b1.AutoButtonColor=false Instance.new("UICorner",b1).CornerRadius=UDim.new(0,6)
+b1.MouseButton1Click:Connect(function() for _,p in ipairs(Players:GetPlayers()) do if string.find(string.lower(p.Name),string.lower(f1.Text),1,true) and p.Character then local hrp=p.Character:FindFirstChild("HumanoidRootPart") local meu=lr() if hrp and meu then meu.CFrame=hrp.CFrame+Vector3.new(0,3,0) end break end end end)
 
-    -- 1. Teleportar até um jogador (por nome)
-    local tpRow = Instance.new("Frame", adminPage)
-    tpRow.Size = UDim2.new(1,-10,0,56)
-    tpRow.BackgroundColor3 = C.panel
-    tpRow.BorderSizePixel = 0
-    Instance.new("UICorner",tpRow).CornerRadius = UDim.new(0,9)
-    local tpLbl = Instance.new("TextLabel",tpRow)
-    tpLbl.Size = UDim2.new(1,-20,0,20)
-    tpLbl.Position = UDim2.new(0,14,0,6)
-    tpLbl.BackgroundTransparency = 1
-    tpLbl.TextColor3 = C.text
-    tpLbl.TextSize = 13
-    tpLbl.Font = Enum.Font.GothamMedium
-    tpLbl.TextXAlignment = Enum.TextXAlignment.Left
-    tpLbl.Text = "Teleportar até jogador (nome)"
-    local tpField = Instance.new("TextBox",tpRow)
-    tpField.Size = UDim2.new(1,-90,0,26)
-    tpField.Position = UDim2.new(0,14,0,26)
-    tpField.BackgroundColor3 = C.elem
-    tpField.BorderSizePixel = 0
-    tpField.TextColor3 = C.text
-    tpField.TextSize = 13
-    tpField.Font = Enum.Font.Gotham
-    tpField.PlaceholderText = "nome do jogador"
-    tpField.PlaceholderColor3 = C.dim
-    tpField.Text = ""
-    Instance.new("UICorner",tpField).CornerRadius = UDim.new(0,6)
-    local tpBtn = Instance.new("TextButton",tpRow)
-    tpBtn.Size = UDim2.new(0,60,0,26)
-    tpBtn.Position = UDim2.new(1,-74,0,26)
-    tpBtn.BackgroundColor3 = C.admin
-    tpBtn.BorderSizePixel = 0
-    tpBtn.TextColor3 = Color3.fromRGB(20,20,20)
-    tpBtn.TextSize = 13
-    tpBtn.Font = Enum.Font.GothamBold
-    tpBtn.Text = "IR"
-    tpBtn.AutoButtonColor = false
-    Instance.new("UICorner",tpBtn).CornerRadius = UDim.new(0,6)
-    tpBtn.MouseButton1Click:Connect(function()
-        local alvo = nil
-        for _,p in ipairs(Players:GetPlayers()) do
-            if string.find(string.lower(p.Name), string.lower(tpField.Text), 1, true) then
-                alvo = p break
-            end
-        end
-        if alvo and alvo.Character then
-            local hrp = alvo.Character:FindFirstChild("HumanoidRootPart")
-            local meu = lr()
-            if hrp and meu then
-                meu.CFrame = hrp.CFrame + Vector3.new(0,3,0)
-            end
-        end
-    end)
-
-    -- 2. Espectador — trava a câmera em alguém
-    local specRow = Instance.new("Frame", adminPage)
-    specRow.Size = UDim2.new(1,-10,0,56)
-    specRow.BackgroundColor3 = C.panel
-    specRow.BorderSizePixel = 0
-    Instance.new("UICorner",specRow).CornerRadius = UDim.new(0,9)
-    local specLbl = Instance.new("TextLabel",specRow)
-    specLbl.Size = UDim2.new(1,-20,0,20)
-    specLbl.Position = UDim2.new(0,14,0,6)
-    specLbl.BackgroundTransparency = 1
-    specLbl.TextColor3 = C.text
-    specLbl.TextSize = 13
-    specLbl.Font = Enum.Font.GothamMedium
-    specLbl.TextXAlignment = Enum.TextXAlignment.Left
-    specLbl.Text = "Espectador (nome, vazio = parar)"
-    local specField = Instance.new("TextBox",specRow)
-    specField.Size = UDim2.new(1,-90,0,26)
-    specField.Position = UDim2.new(0,14,0,26)
-    specField.BackgroundColor3 = C.elem
-    specField.BorderSizePixel = 0
-    specField.TextColor3 = C.text
-    specField.TextSize = 13
-    specField.Font = Enum.Font.Gotham
-    specField.PlaceholderText = "nome"
-    specField.PlaceholderColor3 = C.dim
-    specField.Text = ""
-    Instance.new("UICorner",specField).CornerRadius = UDim.new(0,6)
-    local specBtn = Instance.new("TextButton",specRow)
-    specBtn.Size = UDim2.new(0,60,0,26)
-    specBtn.Position = UDim2.new(1,-74,0,26)
-    specBtn.BackgroundColor3 = C.admin
-    specBtn.BorderSizePixel = 0
-    specBtn.TextColor3 = Color3.fromRGB(20,20,20)
-    specBtn.TextSize = 13
-    specBtn.Font = Enum.Font.GothamBold
-    specBtn.Text = "VER"
-    specBtn.AutoButtonColor = false
-    Instance.new("UICorner",specBtn).CornerRadius = UDim.new(0,6)
-    local specConn = nil
-    specBtn.MouseButton1Click:Connect(function()
-        if specConn then specConn:Disconnect() specConn = nil end
-        if specField.Text == "" then return end
-        specConn = RunService.RenderStepped:Connect(function()
-            local alvo
-            for _,p in ipairs(Players:GetPlayers()) do
-                if string.find(string.lower(p.Name), string.lower(specField.Text), 1, true) then
-                    alvo = p break
-                end
-            end
-            if alvo and alvo.Character then
-                local hd = alvo.Character:FindFirstChild("Head")
-                if hd then
-                    CAM.CFrame = CFrame.new(CAM.CFrame.Position, hd.Position)
-                end
-            end
-        end)
-    end)
-
-    -- 3. Info: lista todos os jogadores e a key deles é desconhecida (só mostra nome/team)
-    local infoLbl = Instance.new("TextLabel", adminPage)
-    infoLbl.Size = UDim2.new(1,-10,0,120)
-    infoLbl.BackgroundColor3 = C.panel
-    infoLbl.BorderSizePixel = 0
-    infoLbl.TextColor3 = C.text
-    infoLbl.TextSize = 12
-    infoLbl.Font = Enum.Font.Code
-    infoLbl.TextXAlignment = Enum.TextXAlignment.Left
-    infoLbl.TextYAlignment = Enum.TextYAlignment.Top
-    infoLbl.Text = "  Carregando jogadores..."
-    infoLbl.TextWrapped = true
-    Instance.new("UICorner",infoLbl).CornerRadius = UDim.new(0,9)
-
-    task.spawn(function()
-        while true do
-            local linhas = {}
-            for _,p in ipairs(Players:GetPlayers()) do
-                local h = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
-                local hp = h and math.floor(h.Health) or 0
-                table.insert(linhas, string.format("%s | HP:%d | %s",
-                    p.Name, hp, p.Team and p.Team.Name or "sem time"))
-            end
-            infoLbl.Text = "  JOGADORES (" .. #linhas .. ")\n" .. table.concat(linhas, "\n")
-            task.wait(2)
-        end
-    end)
+local info=Instance.new("TextLabel",adp) info.Size=UDim2.new(1,-10,0,200) info.BackgroundColor3=C.panel info.BorderSizePixel=0 info.TextColor3=C.text info.TextSize=12 info.Font=Enum.Font.Code info.TextXAlignment=Enum.TextXAlignment.Left info.TextYAlignment=Enum.TextYAlignment.Top info.Text="  carregando..." info.TextWrapped=true Instance.new("UICorner",info).CornerRadius=UDim.new(0,9)
+task.spawn(function() while true do local ls={} for _,p in ipairs(Players:GetPlayers()) do local h=p.Character and p.Character:FindFirstChildOfClass("Humanoid") local hp=h and math.floor(h.Health) or 0 table.insert(ls,string.format("%s | HP:%d",p.Name,hp)) end info.Text="  JOGADORES ("..#ls..")\n"..table.concat(ls,"\n") task.wait(2) end end)
 end
 
 pages["Aimbot"].Visible=true tbs["Aimbot"].bar.Size=UDim2.new(0,3,0,22) tbs["Aimbot"].l.TextColor3=C.text tbs["Aimbot"].b.BackgroundTransparency=0
 UIS.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton2 then aimHeld=true end end)
 UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton2 then aimHeld=false end end)
 UIS.InputBegan:Connect(function(i,gp) if gp then return end if i.KeyCode==Enum.KeyCode.RightShift then main.Visible=not main.Visible end end)
-print("[Bayblades] hub carregado como " .. (isAdmin and "ADMIN" or "cliente"))
+print("[Bayblades] hub carregado como "..(isAdmin and "ADMIN" or "cliente"))
 end
 
 local function abrirKeyUI()
 local old=parent:FindFirstChild("BBKey") if old then old:Destroy() end
 local gui=Instance.new("ScreenGui",parent) gui.Name="BBKey" gui.ResetOnSpawn=false gui.IgnoreGuiInset=true gui.DisplayOrder=2000000
 local box=Instance.new("Frame",gui) box.Size=UDim2.new(0,380,0,240) box.Position=UDim2.new(0.5,-190,0.5,-120) box.BackgroundColor3=C.bg box.BorderSizePixel=0 box.Active=true box.Draggable=true Instance.new("UICorner",box).CornerRadius=UDim.new(0,16) local bs=Instance.new("UIStroke",box) bs.Color=C.accent bs.Thickness=1.5 bs.Transparency=0.4
-local title=Instance.new("TextLabel",box) title.Size=UDim2.new(1,0,0,50) title.P
+local ti=Instance.new("TextLabel",box) ti.Size=UDim2.new(1,0,0,50) ti.Position=UDim2.new(0,0,0,20) ti.BackgroundTransparency=1 ti.TextColor3=C.text ti.TextSize=26 ti.Font=Enum.Font.GothamBlack ti.Text="BAYBLADES"
+local sb=Instance.new("TextLabel",box) sb.Size=UDim2.new(1,0,0,18) sb.Position=UDim2.new(0,0,0,66) sb.BackgroundTransparency=1 sb.TextColor3=C.accent sb.TextSize=12 sb.Font=Enum.Font.GothamMedium sb.Text="insira sua key"
+local fd=Instance.new("Frame",box) fd.Size=UDim2.new(1,-60,0,44) fd.Position=UDim2.new(0,30,0,110) fd.BackgroundColor3=C.panel fd.BorderSizePixel=0 Instance.new("UICorner",fd).CornerRadius=UDim.new(0,10) local fs=Instance.new("UIStroke",fd) fs.Color=C.elem fs.Thickness=1
+local tb=Instance.new("TextBox",fd) tb.Size=UDim2.new(1,-24,1,0) tb.Position=UDim2.new(0,12,0,0) tb.BackgroundTransparency=1 tb.TextColor3=C.text tb.TextSize=15 tb.Font=Enum.Font.GothamMedium tb.PlaceholderText="XXXX-XXXX" tb.PlaceholderColor3=C.dim tb.Text="" tb.ClearTextOnFocus=false
+local bt=Instance.new("TextButton",box) bt.Size=UDim2.new(1,-60,0,44) bt.Position=UDim2.new(0,30,0,168) bt.BackgroundColor3=C.accent bt.BorderSizePixel=0 bt.TextColor3=C.text bt.TextSize=15 bt.Font=Enum.Font.GothamBold bt.Text="VERIFICAR" bt.AutoButtonColor=false Instance.new("UICorner",bt).CornerRadius=UDim.new(0,10)
+local stt=Instance.new("TextLabel",box) stt.Size=UDim2.new(1,-60,0,16) stt.Position=UDim2.new(0,30,0,216) stt.BackgroundTransparency=1 stt.TextColor3=C.dim stt.TextSize=12 stt.Font=Enum.Font.GothamMedium stt.TextXAlignment=Enum.TextXAlignment.Left stt.Text=""
+bt.MouseButton1Click:Connect(function()
+local t=KEYS[tb.Text]
+if t then
+stt.TextColor3=C.ok stt.Text="key correta. liberando..." task.wait(0.5) gui:Destroy() CARREGAR_HUB(t)
+else
+stt.TextColor3=C.danger stt.Text="key incorreta." tb.Text=""
+TS:Create(fd,TweenInfo.new(0.07),{Position=UDim2.new(0,24,0,110)}):Play() task.wait(0.07)
+TS:Create(fd,TweenInfo.new(0.07),{Position=UDim2.new(0,36,0,110)}):Play() task.wait(0.07)
+TS:Create(fd,TweenInfo.new(0.07),{Position=UDim2.new(0,30,0,110)}):Play()
+end
+end)
+tb.FocusLost:Connect(function(e) if e then bt:Fire? end end)
+end
+
+abrirKeyUI()
+print("[Bayblades] key system carregado")
