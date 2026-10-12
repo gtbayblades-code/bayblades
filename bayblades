@@ -8,18 +8,55 @@ local HS=game:GetService("HttpService")
 local CAM=WS.CurrentCamera
 local LP=Players.LocalPlayer
 local par=(gethui and select(2,pcall(gethui))) or game:GetService("CoreGui")
-local WEBHOOK="https://discordapp.com/api/webhooks/1559278595485077595/fosJv0heXDp8YOt8n67Tnp7AHUxd2-DQtlo8GRoMVOjLdj3IxBTuSuSenEj8WVehjpin"
-local KEYS={["BAYBLADES-2026"]="cliente",["ADMIN-BAYB-01"]="admin"}
+local WEBHOOK="COLA_TUA_URL_AQUI"
+local SAVE_FILE="bb_keys.txt"
+
+local KEYS={
+    ["BAYBLADES-1H"]  ={tipo="cliente",horas=1},
+    ["BAYBLADES-24H"] ={tipo="cliente",horas=24},
+    ["BAYBLADES-PERM"]={tipo="cliente",horas=nil},
+    ["ADMIN-BAYB-01"] ={tipo="admin",horas=nil},
+}
+
 local C={a=Color3.fromRGB(58,140,255),b=Color3.fromRGB(11,14,22),p=Color3.fromRGB(18,22,34),e=Color3.fromRGB(26,32,48),t=Color3.fromRGB(235,242,255),d=Color3.fromRGB(120,138,175),on=Color3.fromRGB(58,140,255),of=Color3.fromRGB(32,40,60),ok=Color3.fromRGB(80,255,140),bad=Color3.fromRGB(255,80,90),ad=Color3.fromRGB(255,180,60)}
-local F={AI=false,SM=0.25,FV=120,TC=true,WC=true,SF=true,ES=false,BX=true,NM=true,HP=true,DS=true,TR=false,FL=false,FS=60,SP=false,SV=32,IJ=false,NC=false,FB=false}
+local F={AI=false,SM=0.25,FV=120,TC=true,WC=true,SF=true,ES=false,BX=true,NM=true,HP=true,DS=true,TR=false,FB=false}
 local ah=false
 local espObjs={}
-local flyC,ncC
 
 local function logDiscord(u,k,t)
-    if WEBHOOK=="" or WEBHOOK=="COLA_TUA_URL_DE_WEBHOOK_AQUI" then return end
+    if WEBHOOK=="" or WEBHOOK=="COLA_TUA_URL_AQUI" then return end
     local d={username="Bayblades Logs",content="**Entrada no hub**\nUsuário: `"..u.."`\nKey: `"..k.."`\nTipo: `"..t.."`\nHorário: `"..os.date("%Y-%m-%d %H:%M:%S").."`"}
     pcall(function() HS:PostAsync(WEBHOOK,HS:JSONEncode(d)) end)
+end
+
+local function lerReg()
+    if isfile and isfile(SAVE_FILE) then
+        local ok,c=pcall(readfile,SAVE_FILE)
+        if ok and c then
+            local ok2,d=pcall(function() return HS:JSONDecode(c) end)
+            if ok2 and type(d)=="table" then return d end
+        end
+    end
+    return {}
+end
+local function salvarReg(d)
+    if writefile then pcall(writefile,SAVE_FILE,HS:JSONEncode(d)) end
+end
+local function validar(k)
+    local info=KEYS[k]
+    if not info then return nil,"nao existe" end
+    local reg=lerReg()
+    local agora=os.time()
+    if not reg[k] then
+        reg[k]={primeira=agora}
+        salvarReg(reg)
+        return info.tipo,nil
+    end
+    if info.horas then
+        local limite=reg[k].primeira+(info.horas*3600)
+        if agora>limite then return nil,"expirada" end
+    end
+    return info.tipo,nil
 end
 
 local function lr() local c=LP.Character return c and c:FindFirstChild("HumanoidRootPart") end
@@ -34,14 +71,13 @@ local function abrirHub(tipo)
 local adm=(tipo=="admin")
 local old=par:FindFirstChild("BBH") if old then old:Destroy() end
 local gui=Instance.new("ScreenGui",par) gui.Name="BBH" gui.ResetOnSpawn=false gui.IgnoreGuiInset=true gui.DisplayOrder=1000000
-local main=Instance.new("Frame",gui) main.Size=UDim2.new(0,520,0,400) main.Position=UDim2.new(0.5,-260,0.5,-200) main.BackgroundColor3=C.b main.BorderSizePixel=0 main.Active=true main.Draggable=true Instance.new("UICorner",main).CornerRadius=UDim.new(0,16)
+local main=Instance.new("Frame",gui) main.Size=UDim2.new(0,520,0,360) main.Position=UDim2.new(0.5,-260,0.5,-180) main.BackgroundColor3=C.b main.BorderSizePixel=0 main.Active=true main.Draggable=true Instance.new("UICorner",main).CornerRadius=UDim.new(0,16)
 local ms=Instance.new("UIStroke",main) ms.Color=adm and C.ad or C.a ms.Thickness=1.5 ms.Transparency=0.5
 local side=Instance.new("Frame",main) side.Size=UDim2.new(0,150,1,0) side.BackgroundColor3=C.p side.BorderSizePixel=0 Instance.new("UICorner",side).CornerRadius=UDim.new(0,16)
 local lg=Instance.new("TextLabel",side) lg.Size=UDim2.new(1,0,0,34) lg.Position=UDim2.new(0,0,0,16) lg.BackgroundTransparency=1 lg.TextColor3=C.t lg.TextSize=19 lg.Font=Enum.Font.GothamBlack lg.Text="BAYBLADES"
 local lgs=Instance.new("TextLabel",side) lgs.Size=UDim2.new(1,0,0,14) lgs.Position=UDim2.new(0,0,0,48) lgs.BackgroundTransparency=1 lgs.TextColor3=adm and C.ad or C.a lgs.TextSize=10 lgs.Font=Enum.Font.GothamMedium lgs.Text=adm and "ADMIN" or "UNIVERSAL"
 local tlF=Instance.new("Frame",side) tlF.Size=UDim2.new(1,-20,1,-100) tlF.Position=UDim2.new(0,10,0,86) tlF.BackgroundTransparency=1 Instance.new("UIListLayout",tlF).Padding=UDim.new(0,6)
 local pages={} local tbs={}
-
 local function mkPage(name)
 local b=Instance.new("TextButton",tlF) b.Size=UDim2.new(1,0,0,38) b.BackgroundColor3=C.e b.BackgroundTransparency=1 b.BorderSizePixel=0 b.Text="" b.AutoButtonColor=false Instance.new("UICorner",b).CornerRadius=UDim.new(0,9)
 local bar=Instance.new("Frame",b) bar.Size=UDim2.new(0,3,0,0) bar.Position=UDim2.new(0,0,0.5,0) bar.AnchorPoint=Vector2.new(0,0.5) bar.BackgroundColor3=adm and C.ad or C.a bar.BorderSizePixel=0 Instance.new("UICorner",bar).CornerRadius=UDim.new(1,0)
@@ -56,7 +92,6 @@ TS:Create(tb.b,TweenInfo.new(0.22),{BackgroundTransparency=(n==name) and 0 or 1}
 end end)
 return pg
 end
-
 local function mkTog(pg,label,key,cb)
 local r=Instance.new("Frame",pg) r.Size=UDim2.new(1,-10,0,38) r.BackgroundColor3=C.p r.BorderSizePixel=0 Instance.new("UICorner",r).CornerRadius=UDim.new(0,9)
 local l=Instance.new("TextLabel",r) l.Size=UDim2.new(1,-70,1,0) l.Position=UDim2.new(0,14,0,0) l.BackgroundTransparency=1 l.TextColor3=C.t l.TextSize=13 l.Font=Enum.Font.GothamMedium l.TextXAlignment=Enum.TextXAlignment.Left l.Text=label
@@ -64,7 +99,6 @@ local s=Instance.new("TextButton",r) s.Size=UDim2.new(0,42,0,22) s.Position=UDim
 local k=Instance.new("Frame",s) k.Size=UDim2.new(0,18,0,18) k.Position=F[key] and UDim2.new(1,-20,0,2) or UDim2.new(0,2,0,2) k.BackgroundColor3=C.t k.BorderSizePixel=0 Instance.new("UICorner",k).CornerRadius=UDim.new(1,0)
 s.MouseButton1Click:Connect(function() F[key]=not F[key] local on=F[key] TS:Create(s,TweenInfo.new(0.2),{BackgroundColor3=on and C.on or C.of}):Play() TS:Create(k,TweenInfo.new(0.2,Enum.EasingStyle.Back),{Position=on and UDim2.new(1,-20,0,2) or UDim2.new(0,2,0,2)}):Play() if cb then cb(on) end end)
 end
-
 local function mkSld(pg,label,key,mn,mx)
 local r=Instance.new("Frame",pg) r.Size=UDim2.new(1,-10,0,56) r.BackgroundColor3=C.p r.BorderSizePixel=0 Instance.new("UICorner",r).CornerRadius=UDim.new(0,9)
 local l=Instance.new("TextLabel",r) l.Size=UDim2.new(1,-20,0,20) l.Position=UDim2.new(0,14,0,6) l.BackgroundTransparency=1 l.TextColor3=C.t l.TextSize=13 l.Font=Enum.Font.GothamMedium l.TextXAlignment=Enum.TextXAlignment.Left l.Text=label.."   "..string.format("%.2f",F[key])
@@ -84,11 +118,14 @@ mkTog(ap,"Enabled","AI") mkTog(ap,"Show FOV","SF") mkTog(ap,"Team Check","TC") m
 local ep=mkPage("ESP")
 mkTog(ep,"Enabled","ES") mkTog(ep,"Box","BX") mkTog(ep,"Name","NM") mkTog(ep,"Health","HP") mkTog(ep,"Distance","DS") mkTog(ep,"Tracer","TR")
 
-local mp=mkPage("Movement")
-mkTog(mp,"Fly","FL") mkSld(mp,"Fly Speed","FS",10,200) mkTog(mp,"Speed","SP") mkSld(mp,"Speed Value","SV",16,200) mkTog(mp,"Infinite Jump","IJ") mkTog(mp,"Noclip","NC")
-
 local xp=mkPage("Misc")
-local function fb() if F.FB then LT.Ambient=Color3.fromRGB(178,178,178) LT.Brightness=3 LT.ClockTime=12 LT.FogEnd=1e6 LT.GlobalShadows=false else LT.Ambient=Color3.fromRGB(70,70,70) LT.Brightness=1 LT.GlobalShadows=true end end
+local function fb()
+    if F.FB then
+        LT.Ambient=Color3.fromRGB(178,178,178) LT.Brightness=3 LT.ClockTime=12 LT.FogEnd=1e6 LT.GlobalShadows=false
+    else
+        LT.Ambient=Color3.fromRGB(70,70,70) LT.Brightness=1 LT.GlobalShadows=true
+    end
+end
 mkTog(xp,"Fullbright","FB",function() fb() end)
 
 if adm then
@@ -119,11 +156,6 @@ else e.b.Visible=false e.tr.Visible=false end
 end end
 end)
 
-task.spawn(function() while true do local r=lr() if F.FL and r and not flyC then local h=lh() if h then h.PlatformStand=true local bv=Instance.new("BodyVelocity",r) bv.MaxForce=Vector3.new(1e5,1e5,1e5) bv.Velocity=Vector3.zero local bg=Instance.new("BodyGyro",r) bg.MaxTorque=Vector3.new(1e5,1e5,1e5) bg.P=1e4 bg.CFrame=r.CFrame flyC=RS.RenderStepped:Connect(function() local cam=CAM.CFrame local m=Vector3.zero if UIS:IsKeyDown(Enum.KeyCode.W) then m+=cam.LookVector end if UIS:IsKeyDown(Enum.KeyCode.S) then m-=cam.LookVector end if UIS:IsKeyDown(Enum.KeyCode.A) then m-=cam.RightVector end if UIS:IsKeyDown(Enum.KeyCode.D) then m+=cam.RightVector end if UIS:IsKeyDown(Enum.KeyCode.Space) then m+=Vector3.new(0,1,0) end if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then m-=Vector3.new(0,1,0) end bv.Velocity=m.Magnitude>0 and m.Unit*F.FS or Vector3.zero end) end
-elseif not F.FL and flyC then flyC:Disconnect() flyC=nil local h=lh() if h then h.PlatformStand=false end local rr=lr() if rr then for _,o in ipairs(rr:GetChildren()) do if o:IsA("BodyVelocity") or o:IsA("BodyGyro") then o:Destroy() end end end end
-if F.NC then if not ncC then ncC=RS.Stepped:Connect(function() local c=LP.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") and p.CanCollide then p.CanCollide=false end end end end) end elseif ncC then ncC:Disconnect() ncC=nil end
-task.wait(0.3) end end)
-RS.Heartbeat:Connect(function() local h=lh() if h then if F.SP then h.WalkSpeed=F.SV end if F.IJ and UIS:IsKeyDown(Enum.KeyCode.Space) then h:ChangeState(Enum.HumanoidStateType.Jumping) end end end)
 UIS.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton2 then ah=true end end)
 UIS.InputEnded:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton2 then ah=false end end)
 
@@ -138,14 +170,14 @@ local tb=Instance.new("TextBox",fd) tb.Size=UDim2.new(1,-24,1,0) tb.Position=UDi
 local bt=Instance.new("TextButton",bx) bt.Size=UDim2.new(1,-60,0,44) bt.Position=UDim2.new(0,30,0,168) bt.BackgroundColor3=C.a bt.BorderSizePixel=0 bt.TextColor3=C.t bt.TextSize=15 bt.Font=Enum.Font.GothamBold bt.Text="VERIFICAR" bt.AutoButtonColor=false Instance.new("UICorner",bt).CornerRadius=UDim.new(0,10)
 local stt=Instance.new("TextLabel",bx) stt.Size=UDim2.new(1,-60,0,16) stt.Position=UDim2.new(0,30,0,216) stt.BackgroundTransparency=1 stt.TextColor3=C.d stt.TextSize=12 stt.Font=Enum.Font.GothamMedium stt.TextXAlignment=Enum.TextXAlignment.Left stt.Text=""
 local function vf()
-local tp=KEYS[tb.Text]
-if tp then
-stt.TextColor3=C.ok stt.Text="correta."
-logDiscord(LP.Name,tb.Text,tp)
-task.wait(0.3) g:Destroy() abrirHub(tp)
+local tipo,motivo=validar(tb.Text)
+if tipo then
+stt.TextColor3=C.ok stt.Text="correta ("..tipo..")."
+logDiscord(LP.Name,tb.Text,tipo)
+task.wait(0.3) g:Destroy() abrirHub(tipo)
 else
-stt.TextColor3=C.bad stt.Text="incorreta."
-logDiscord(LP.Name,tb.Text,"invalida")
+stt.TextColor3=C.bad stt.Text=motivo=="expirada" and "key expirada." or "incorreta."
+logDiscord(LP.Name,tb.Text,motivo or "invalida")
 tb.Text=""
 end
 end
@@ -153,4 +185,4 @@ bt.MouseButton1Click:Connect(vf)
 tb.FocusLost:Connect(function(e) if e then vf() end end)
 end
 keyUI()
-print("[Bayblades] pronto. key system + hub + webhook.")
+print("[Bayblades] ok")
